@@ -37,9 +37,11 @@ MCHI_LABELS = {m: rf"$M_{{\chi}}={m}$ GeV" for m in MCHI_SEL}
 CMS_COLORS  = ["#5790fc", "#f89c20", "#e42536", "#964a8b", "#9c9ca1", "#7a21dd"]
 
 SCENARIO_INFO = {
-    "S3M_br": dict(marker="o", label="S3M", subtitle="Scalar mediator, Majorana $\\chi$ (PDG 52)"),
-    "S3D_br": dict(marker="s", label="S3D", subtitle="Scalar mediator, Dirac $\\chi$ (PDG 57)"),
+    "S3M_br": dict(marker="o", label="S3M", subtitle="Scalar mediator, Majorana $\\chi$ (PDG 52)", markerfacecolor="none"),
+    "S3D_br": dict(marker="s", label="S3D", subtitle="Scalar mediator, Dirac $\\chi$ (PDG 57)", markerfacecolor=None),
 }
+
+SCENARIO_DISPLAY = {"S3M_br": "S3M", "S3D_br": "S3D"}
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 def load_data(path):
@@ -73,7 +75,8 @@ def make_plot(df, scenario, output, logy=True):
                     linestyle=MCHI_LS[mchi],
                     linewidth=1.8,
                     marker=info["marker"],
-                    markersize=5)
+                    markerfacecolor=info.get("markerfacecolor", None),
+                    markersize=6)
 
     lam_handles = [mlines.Line2D([], [], color=lam_color[l], linewidth=2,
                                  label=rf"$\lambda={l}$")
@@ -83,10 +86,10 @@ def make_plot(df, scenario, output, logy=True):
                                   label=MCHI_LABELS[m])
                     for m in MCHI_SEL]
 
-    leg1 = ax.legend(handles=lam_handles, title=r"Coupling $\lambda$",
+    leg1 = ax.legend(handles=lam_handles, title=None,
                      loc="upper right", framealpha=0.9)
     ax.add_artist(leg1)
-    ax.legend(handles=mchi_handles, title=r"DM mass $M_{\chi}$",
+    ax.legend(handles=mchi_handles, title=None,
               loc="lower left", framealpha=0.9)
 
     ax.set_xlabel(r"Mediator mass $M_{\phi}$ [GeV]")
@@ -103,7 +106,7 @@ def make_plot(df, scenario, output, logy=True):
     ax.text(0.5, 0.97, info["label"],
             transform=ax.transAxes, ha="center", va="top",
             fontsize=16, fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.8))
+            bbox=dict(boxstyle="round,pad=0.3", fc="none", ec="none"))
     ax.text(0.5, 0.90, info["subtitle"],
             transform=ax.transAxes, ha="center", va="top",
             fontsize=14)
@@ -121,10 +124,11 @@ def make_combined_plot(df, output, logy=True):
         print("  [skip] no data for combined plot")
         return
 
-    lam_color   = {l: CMS_COLORS[i] for i, l in enumerate(LAMBDA_SEL)}
-    scen_marker = {s: SCENARIO_INFO[s]["marker"] for s in scenarios}
+    lam_color    = {l: CMS_COLORS[i] for i, l in enumerate(LAMBDA_SEL)}
+    scen_marker  = {s: SCENARIO_INFO[s]["marker"] for s in scenarios}
+    scen_mfc     = {s: SCENARIO_INFO[s].get("markerfacecolor", None) for s in scenarios}
 
-    fig, ax = plt.subplots(figsize=(9, 6))
+    fig, ax = plt.subplots(figsize=(10, 8))
 
     for scenario in scenarios:
         sdf = df[df["scenario"] == scenario]
@@ -139,7 +143,8 @@ def make_combined_plot(df, output, logy=True):
                         linestyle=MCHI_LS[mchi],
                         linewidth=1.8,
                         marker=scen_marker[scenario],
-                        markersize=5)
+                        markerfacecolor=scen_mfc[scenario],
+                        markersize=6)
 
     lam_handles = [mlines.Line2D([], [], color=lam_color[l], linewidth=2,
                                  label=rf"$\lambda={l}$")
@@ -150,17 +155,19 @@ def make_combined_plot(df, output, logy=True):
                     for m in MCHI_SEL]
     scen_handles = [mlines.Line2D([], [], color="black",
                                   marker=scen_marker[s], linewidth=0,
-                                  markersize=7, label=s.replace("_", r"\_"))
+                                  markerfacecolor=scen_mfc[s],
+                                  markersize=8, label=SCENARIO_DISPLAY[s])
                     for s in scenarios]
 
-    leg1 = ax.legend(handles=lam_handles, title=r"$\lambda$",
+    leg1 = ax.legend(handles=lam_handles, title=None,
                      loc="upper right", framealpha=0.9)
-    leg2 = ax.legend(handles=mchi_handles, title=r"$M_{\chi}$",
+    leg2 = ax.legend(handles=mchi_handles, title=None,
                      loc="lower left", framealpha=0.9)
+    leg3 = ax.legend(handles=scen_handles, title=None,
+                     loc="upper center", framealpha=0.9)
     ax.add_artist(leg1)
     ax.add_artist(leg2)
-    ax.legend(handles=scen_handles, title="Scenario",
-              loc="center right", framealpha=0.9)
+    ax.add_artist(leg3)
 
     ax.set_xlabel(r"Mediator mass $M_{\phi}$ [GeV]")
     ax.set_ylabel(r"Cross section $\sigma$ [pb]")
@@ -196,11 +203,11 @@ def main():
     os.makedirs(XSEC_DIR, exist_ok=True)
 
     make_plot(df, "S3M_br",
-              os.path.join(XSEC_DIR, f"xsec_vs_mmed_S3M_br.{fmt}"), logy)
+              os.path.join(XSEC_DIR, f"tchannel_xsec_vs_mmed_S3M_br.{fmt}"), logy)
     make_plot(df, "S3D_br",
-              os.path.join(XSEC_DIR, f"xsec_vs_mmed_S3D_br.{fmt}"), logy)
+              os.path.join(XSEC_DIR, f"tchannel_xsec_vs_mmed_S3D_br.{fmt}"), logy)
     make_combined_plot(df,
-              os.path.join(XSEC_DIR, f"xsec_vs_mmed_combined.{fmt}"), logy)
+              os.path.join(XSEC_DIR, f"tchannel_xsec_vs_mmed_combined.{fmt}"), logy)
 
 
 if __name__ == "__main__":
