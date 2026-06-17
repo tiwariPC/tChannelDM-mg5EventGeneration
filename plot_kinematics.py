@@ -199,11 +199,15 @@ def main():
 
     out_dir = "kinematics"
     os.makedirs(out_dir, exist_ok=True)
-    suffix = "norm" if args.normalize else "raw"
-
-    panel_names = ["mphi_scan", "mchi_scan", "lambda_scan", "ratio_scan"]
+    panel_names = [
+        "mDM1_lam2p5_mMEDvar",
+        "mMED1000_lam2p5_mDMvar",
+        "mMED1000_mDM1_lambdavar",
+        "ratio0p1_lam2p5_ratiovar",
+    ]
+    suffix = "" if args.normalize else "_raw"
     for panel, name in zip(PANELS, panel_names):
-        out_path = os.path.join(out_dir, f"kinematics_{name}_{suffix}.pdf")
+        out_path = os.path.join(out_dir, f"met_tchannel_{name}{suffix}.pdf")
         pdf = PdfPages(out_path)
         make_panel_page(pdf, panel, idx_s3m, idx_s3d, args.normalize)
         pdf.close()
