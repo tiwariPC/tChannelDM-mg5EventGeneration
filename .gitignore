@@ -1,0 +1,19 @@
+# MG5 run outputs (multi-GB)
+tChannel_S3D_*/
+tChannel_S3M_*/
+
+# Logs and debug
+logFiles/
+MG5_debug
+orchestrator.log
+*.log
+
+# Text/additional files
+textFiles/
+additional_command
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
